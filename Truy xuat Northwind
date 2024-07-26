@@ -1,0 +1,145 @@
+use Northwind
+/*Cau 1
+select CustomerID, CompanyName, ContactName, Address, City 
+from Customers
+where City = 'London' or Country = 'France'*/
+/*Cau 2
+select CustomerID, CompanyName, ContactName, Address, City, ContactTitle 
+from Customers
+where (ContactTitle = 'Sales Manager' and Country = 'USA') or (ContactTitle = 'Owner' and Country = 'Mexico')
+*/
+ --Bai 3 
+select CustomerID, CompanyName, ContactName, Address, City, ContactTitle
+from Customers 
+where (ContactTitle like '%Manager%' and Country = 'USA') or (not ContactTitle = 'Owner' and Country = 'Mexico')
+ --Bai 4
+set dateformat dmy
+select OrderID, OrderDate, Customer, Employee
+from Orders 
+where OrderDate between '1/1/1997' and '30/6/1997'
+ --Bai 5
+set dateformat dmy
+select OrderID, OrderDate, CustomerID, EmployeeID
+from Orders
+where OrderDate between '1/2/1997' and '28/2/1997'
+ --Bai 6
+set dateformat dmy
+select OrderID, OrderDate, Freight 
+from Orders
+where ShipCountry = 'UK' and EmployeeID = '2' and YEAR(Orderdate) = '1997'
+-- Bai 7
+select ProductID, ProductName
+from Products
+where ProductName like 'Ch%'
+ --Bai 8
+select ProductID, UnitPrice, UnitsInStock
+from Products
+where Discontinued = 'true' and UnitsInStock > 0
+--Bai 9
+select CompanyName, ContactName, Country, Phone, Fax 
+from Customers
+where (Country!='USA')
+--Bai 10
+select CompanyName, ContactName, Country, Phone, Fax 
+from Customers
+where (Country!='Brazil') and (Country!='Italy') and (Country!='Spain') and (Country!='Venezuela') and (Country!='UK')
+
+-- 12
+select OrderID, CustomerID, EmployeeID, Orderdate, ShipCountry, Shippeddate, Freight 
+from Orders
+where ((ShipCountry = 'Argentina' and Freight < 5) or (ShipCountry = 'USA' and Freight > 300))
+
+--Bai 13
+select OrderID, c.CustomerID, e.EmployeeID, Orderdate, ShipCountry, Shippeddate, Freight, 'New-Freight' =110% Freight
+from Orders o, Employees e, Customers c
+where (MONTH(OrderDate)=4 and YEAR(OrderDate) = 1997) and
+	o.CustomerID = c.CustomerID and
+	o.EmployeeID= e.EmployeeID
+
+--Bai14
+select ProductID, ProductName, p.SupplierID, UnitPrice, UnitsInStock, 'Total' = UnitPrice * UnitsInStock, Fax
+from Products p, Suppliers s
+where Discontinued = 'TRUE' and p.SupplierID = s.SupplierID
+
+--BAi 15
+select 'Name'= TitleOfCourtesy + ' ' + LEFT(LastName, 1) + FirstName, Hiredate, Title, BirthDate, HomePhone
+from Employees
+where YEAR(HireDate) <= 1993
+
+--Bai 16
+select OrderID, OrderDate, 'Customer' = CompanyName, 'Employee' = LastName
+from Orders o, Customers c, Employees e
+where MONTH(OrderDate) = 4 and o.CustomerID = c.CustomerID and o.EmployeeID = e.EmployeeID
+
+--Bai 17
+select OrderID, OrderDate, 'Customer' = CompanyName, 'Employee' = LastName
+from Orders o, Customers c, Employees e
+where (YEAR(OrderDate) % 2 = 0) and o.CustomerID = c.CustomerID and o.EmployeeID = e.EmployeeID
+
+--Bai 18
+select OrderID, OrderDate, 'Customer' = CompanyName, 'Employee' = LastName
+from Orders o, Customers c, Employees e
+where (DAY(OrderDate) in (5,13,14,23)) and (o.CustomerID = c.CustomerID and o.EmployeeID = e.EmployeeID)
+
+--Bai 19
+select o.OrderID, ProductName, od.UnitPrice, Quantity,
+	'ThanhTien' = (od.UnitPrice*od.Quantity), 
+	od.Discount, 
+	'TienGiamGia' = ((od.UnitPrice*od.Quantity) * od.Discount), 
+	'TienPhaiTra' = (od.UnitPrice*od.Quantity) - ((od.UnitPrice*od.Quantity) * od.Discount)
+from [Order Details] od, Orders o, Products p
+where YEAR(OrderDate) = 1997 and (od.OrderID = o.OrderID and od.ProductID = p.ProductID)
+
+--Bai 20
+select o.OrderID, ProductName, od.UnitPrice, Quantity,
+	'ThanhTien' = (od.UnitPrice*od.Quantity), 
+	od.Discount, 
+	'TienGiamGia' = ((od.UnitPrice*od.Quantity) * od.Discount), 
+	'TienPhaiTra' = (od.UnitPrice*od.Quantity) - ((od.UnitPrice*od.Quantity) * od.Discount)
+from [Order Details] od, Orders o, Products p
+where (Discount > 0 and ((od.UnitPrice*od.Quantity) - ((od.UnitPrice*od.Quantity) * od.Discount)) < 50) and (od.OrderID = o.OrderID and od.ProductID = p.ProductID)
+
+--Bai 21
+select Sum(SupplierID) 'Sum', MAX(UnitPrice) 'Max', Min(UnitPrice) 'Min', AVG(UnitPrice) 'AVG'
+from Products
+
+--Bai 22
+select Sum(ProductID) 'Sum', MAX(UnitPrice) 'Max', Min(UnitPrice) 'Min', AVG(UnitPrice) 'AVG',
+	Count (*) C1, Count(ProductID) C2, CategoryID
+from Products
+group by CategoryID
+
+--Bai 23
+select COUNT(*) 'So luong', ShipCountry
+from Orders
+where ShipCountry in ('UK','Belgium','Canada')
+Group by ShipCountry
+
+--Bai 24
+select c.CategoryName
+from Products p, Categories c 
+where p.CategoryID=c.CategoryID
+Group by c.CategoryName
+having AVG(UnitPrice) > 30
+
+--Bai 25
+select p.ProductName, AVG(UnitPrice) 'Don gia trung binh'
+from Products p, Categories c 
+where UnitPrice > 30 and p.CategoryID=c.CategoryID
+Group by ProductName
+
+--Bai 26
+select c.CategoryName, 'SalesTotal' = Sum(od.UnitPrice*od.Quantity*(1-od.Discount))
+from Products p, Categories c, [Order Details] od, Orders o
+where p.CategoryID=c.CategoryID and p.ProductID=od.ProductID and od.OrderID = o.OrderID and YEAR(OrderDate) = 1996
+group by c.CategoryName
+
+--Bai 27 
+select CompanyName, Freight,
+'SalesTotal' = Sum(od.UnitPrice*od.Quantity*(1-od.Discount)),
+'Percent'= o.Freight / Sum(od.UnitPrice * od.Quantity*(1-od.Discount))
+from Customers c, Orders o, [Order Details] od
+where YEAR(OrderDate) = 1997 and (c.CustomerID= o.CustomerID and o.OrderID = od.OrderID)
+group by CompanyName, Freight
+
+
