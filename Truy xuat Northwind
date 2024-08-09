@@ -142,4 +142,151 @@ from Customers c, Orders o, [Order Details] od
 where YEAR(OrderDate) = 1997 and (c.CustomerID= o.CustomerID and o.OrderID = od.OrderID)
 group by CompanyName, Freight
 
+============================================BAI THUC HANH 3===============================================================
+use Northwind
+--Bai thuc hanh 3
+--Cau 1:
+select* into CacKhachHangMy
+from Customers
+select* 
+from CacKhachHangMy
 
+--Cau 2:
+select	top 5 e.EmployeeID, 
+		e.FirstName + ' ' + e.LastName 'FullName',
+		Count(OrderID) 'So luong'
+		Into NamNhanVienGioi
+from Orders o, Employees e
+where o.EmployeeID = e.EmployeeID
+group by e.EmployeeID, e.FirstName + ' ' + e.LastName
+order by 3 desc
+
+select * from NamNhanVienGioi
+
+--Cau 3:
+select top 10 c.CustomerID, c.CompanyName,
+	c.Address + ' ' + c.City + ' ' + c.Country 'Dia chi',
+	COUNT(o.OrderID) 'Tong so don'
+	into MuoiKhachHang
+from Customers c, Orders o
+where c.CustomerID = o.CustomerID
+group by c.CustomerID, c.CompanyName,
+	c.Address + ' ' + c.City + ' ' + c.Country
+order by 4 desc
+
+select * from MuoiKhachHang
+
+--Cau 4: 
+select  top 5 s.Country,
+	count(ProductID) 'So don hang'
+	into Top5QGMuaHang
+from Products p, Suppliers s
+where p.SupplierID = s.SupplierID
+group by s.Country
+order by 2 desc
+
+select * from Top5QGMuaHang
+
+--Cau 5: 
+select  top 5 s.Country,
+	count(ProductID) 'So don hang'
+	into Top5QGItMuaHang
+from Products p, Suppliers s
+where p.SupplierID = s.SupplierID
+group by s.Country
+order by 2 
+
+select * from Top5QGItMuaHang
+
+
+
+--select Country
+--from Customers
+
+----------------------------------------------APPEND QUERY------------------------------------------------
+--APPEND THEM NHIEU HANG DU LIEU 
+--Tao query copy thiet ke ma khong lay du lieu
+select *into KhachHang
+from Customers
+delete from KhachHang
+select * from KhachHang
+
+--Cau 6:
+Insert into KhachHang
+select *
+from Customers
+where Country = 'Mỹ'
+
+select * from KhachHang
+delete from KhachHang
+
+--Cau 7:
+insert into KhachHang
+select *
+from Customers
+where CustomerID in (
+	select top 10 c.CustomerID
+	from Customers c, Orders o
+	where c.CustomerID = o.CustomerID
+	group by c.CustomerID
+	order by COUNT(OrderID) desc 
+)
+
+--------------------------------------------------UPDATE QUERY--------------------------------------------------
+
+----Cau 1:
+select *into KH
+from Customers
+
+UPDATE KH
+SET  Country = N'Mỹ'
+WHERE Country = 'Mỹ';
+
+select * from KH
+
+--Cau 2:
+Update KH
+set Country = (case 
+				when Country = 'Germany' then N'Đức'
+				else N'Pháp'
+				end)
+where Country in ('Germany', 'France')
+
+select * from KH
+
+--Cau 6:
+update KH
+set PostalCode = '18' + RIGHT(PostalCode, Len(PostalCode)-2)
+where Country = N'Đức'
+
+UPDATE KH
+SET PostalCode = '18' + SUBSTRING(PostalCode, 3, LEN(PostalCode) - 2)
+WHERE Country = N'Đức'
+
+-
+---------------------------------------------CROSS TAB------------------------------------------------
+--Cau 1:
+select ProductName, [1996], [1997], [1998]
+from
+	(select p.ProductName, YEAR(Orderdate) 'nam', SUM(Quantity) TongSL
+	from [Order Details] d, Orders o, Products p
+	where d.OrderID = o.OrderID and p.ProductID = d.ProductID 
+		and YEAR(Orderdate) between 1996 and 1998
+	group by p.ProductName, YEAR(Orderdate))A
+pivot
+(
+sum(TongSL) for nam in ([1996], [1997], [1998])
+)B
+
+--Cau 5:
+select CompanyName, ISNULL([1],0) 'Qtr 1', ISNULL([2],0) 'Qtr 2', ISNULL([3],0) 'Qtr 3', ISNULL([4],0) 'Qtr 4',
+	'Tong Cong' = ISNULL([1],0)+ISNULL([2],0)+ISNULL([3],0)+ISNULL([4],0)
+from (select c.CompanyName,  UnitPrice * Quantity as 'TriGia',
+		DATEPART(q,OrderDate) as 'Quy'
+	from [Order Details] d, Orders o, Customers c
+	where d.OrderID = o.OrderID and o.CustomerID = c.CustomerID
+	and YEAR(OrderDate) = 1997)a 
+pivot
+(
+Sum(TriGia) for Quy in ([1],[2],[3],[4])
+)B
